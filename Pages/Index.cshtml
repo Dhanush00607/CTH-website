@@ -1,0 +1,687 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Scientific Calculator with Calendar";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        :root {
+            --bg-color: #0a1128;
+            --text-color: #ffffff;
+            --primary-accent: #ff69b4;
+            --secondary-accent: #64c8ff;
+            --button-bg: rgba(255, 255, 255, 0.1);
+            --display-bg: rgba(255, 255, 255, 0.2);
+            --shadow-color: rgba(255, 105, 180, 0.5);
+            --calendar-bg: rgba(70, 130, 180, 0.3);
+            --holiday-color: #ff6b6b;
+        }
+
+        .light-mode {
+            --bg-color: #f0f2f5;
+            --text-color: #000000;
+            --primary-accent: #d6336c;
+            --secondary-accent: #1c7ed6;
+            --button-bg: rgba(0, 0, 0, 0.1);
+            --display-bg: rgba(0, 0, 0, 0.2);
+            --shadow-color: rgba(214, 51, 108, 0.5);
+            --calendar-bg: rgba(173, 216, 230, 0.5);
+            --holiday-color: #ff4757;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--button-bg);
+            border: none;
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+            background-color: var(--button-bg);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background-color: transparent;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            background-color: var(--primary-accent);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            background-color: var(--bg-color);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 20px var(--shadow-color);
+            margin-bottom: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Calculator Styles */
+        .calculator {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .display {
+            background-color: var(--display-bg);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 24px;
+            min-height: 30px;
+            text-align: right;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background-color: rgba(255, 105, 180, 0.5);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .operator {
+            background-color: rgba(255, 165, 0, 0.5);
+        }
+
+        .scientific {
+            background-color: rgba(100, 200, 255, 0.5);
+        }
+
+        .special {
+            background-color: rgba(138, 43, 226, 0.5);
+        }
+
+        /* Temperature Converter Styles */
+        .temp-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .temp-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .converter-result {
+            font-size: 18px;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: var(--display-bg);
+            border-radius: 5px;
+        }
+
+        /* Calendar Styles */
+        .calendar {
+            width: 100%;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .calendar-nav button {
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 5px;
+            background-color: var(--calendar-bg);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar-day:hover {
+            background-color: rgba(255, 105, 180, 0.3);
+        }
+
+        .calendar-day.today {
+            border: 2px solid var(--primary-accent);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.5;
+        }
+
+        .calendar-day-number {
+            font-weight: bold;
+        }
+
+        .calendar-holiday {
+            font-size: 10px;
+            color: var(--holiday-color);
+            text-align: center;
+            word-break: break-word;
+            margin-top: 3px;
+        }
+
+        .holiday-list {
+            margin-top: 20px;
+        }
+
+        .holiday-item {
+            padding: 10px;
+            border-bottom: 1px solid var(--button-bg);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        h1 {
+            color: var(--primary-accent);
+            text-shadow: 0 0 10px var(--primary-accent);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--secondary-accent);
+            margin-top: 0;
+            text-align: center;
+        }
+
+        select, input {
+            background-color: var(--display-bg);
+            color: var(--text-color);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <button class="mode-toggle" onclick="toggleMode()">
+        <span id="mode-icon">🌙</span> <span id="mode-text">Dark Mode</span>
+    </button>
+
+    <div class="main-container">
+        <h1>Scientific Calculator</h1>
+        <h2>With Temperature Converter & Indian Holiday Calendar</h2>
+        
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="openTab('calculator')">Calculator</button>
+            <button class="tab-button" onclick="openTab('converter')">Temp Converter</button>
+            <button class="tab-button" onclick="openTab('calendar')">Holiday Calendar</button>
+        </div>
+
+        <!-- Calculator Tab -->
+        <div id="calculator" class="tab-content active">
+            <div class="calculator">
+                <div class="display" id="display">0</div>
+                <div class="buttons">
+                    <button class="special" onclick="clearDisplay()">C</button>
+                    <button class="special" onclick="backspace()">⌫</button>
+                    <button class="special" onclick="appendToDisplay('%')">%</button>
+                    <button class="operator" onclick="appendToDisplay('/')">/</button>
+                    <button class="scientific" onclick="appendToDisplay('Math.PI')">π</button>
+                    
+                    <button onclick="appendToDisplay('7')">7</button>
+                    <button onclick="appendToDisplay('8')">8</button>
+                    <button onclick="appendToDisplay('9')">9</button>
+                    <button class="operator" onclick="appendToDisplay('*')">×</button>
+                    <button class="scientific" onclick="appendToDisplay('(')">(</button>
+                    
+                    <button onclick="appendToDisplay('4')">4</button>
+                    <button onclick="appendToDisplay('5')">5</button>
+                    <button onclick="appendToDisplay('6')">6</button>
+                    <button class="operator" onclick="appendToDisplay('-')">-</button>
+                    <button class="scientific" onclick="appendToDisplay(')')">)</button>
+                    
+                    <button onclick="appendToDisplay('1')">1</button>
+                    <button onclick="appendToDisplay('2')">2</button>
+                    <button onclick="appendToDisplay('3')">3</button>
+                    <button class="operator" onclick="appendToDisplay('+')">+</button>
+                    <button class="scientific" onclick="appendToDisplay('**')">^</button>
+                    
+                    <button onclick="appendToDisplay('0')">0</button>
+                    <button onclick="appendToDisplay('.')">.</button>
+                    <button class="special" onclick="calculate()">=</button>
+                    <button class="scientific" onclick="appendToDisplay('Math.sqrt(')">√</button>
+                    <button class="scientific" onclick="calculateFunction('Math.sin(')">sin</button>
+                    <button class="scientific" onclick="calculateFunction('Math.cos(')">cos</button>
+                    <button class="scientific" onclick="calculateFunction('Math.tan(')">tan</button>
+                    <button class="scientific" onclick="calculateFunction('Math.log(')">ln</button>
+                    <button class="scientific" onclick="calculateFunction('Math.log10(')">log</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Temperature Converter Tab -->
+        <div id="converter" class="tab-content">
+            <div class="temperature-converter">
+                <div class="temp-controls">
+                    <div class="temp-input-group">
+                        <label for="from-temp">From:</label>
+                        <select id="from-temp">
+                            <option value="celsius">Celsius (°C)</option>
+                            <option value="fahrenheit">Fahrenheit (°F)</option>
+                            <option value="kelvin">Kelvin (K)</option>
+                        </select>
+                        <input type="number" id="temp-input" placeholder="Enter temperature" oninput="convertTemperature()">
+                    </div>
+                    <div class="temp-input-group">
+                        <label for="to-temp">To:</label>
+                        <select id="to-temp">
+                            <option value="fahrenheit">Fahrenheit (°F)</option>
+                            <option value="celsius">Celsius (°C)</option>
+                            <option value="kelvin">Kelvin (K)</option>
+                        </select>
+                        <div class="converter-result" id="temp-result">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Tab -->
+        <div id="calendar" class="tab-content">
+            <div class="calendar">
+                <div class="calendar-header">
+                    <button class="calendar-nav" onclick="previousMonth()">←</button>
+                    <div class="calendar-title" id="calendar-month-year">Month Year</div>
+                    <button class="calendar-nav" onclick="nextMonth()">→</button>
+                </div>
+                
+                <div class="calendar-grid" id="calendar-days-header">
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+                </div>
+                
+                <div class="calendar-grid" id="calendar-days"></div>
+                
+                <div class="holiday-list" id="holiday-list">
+                    <h3>Holidays this month:</h3>
+                    <div id="holiday-items"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Calculator functionality
+        let currentDisplay = '0';
+        let isNewInput = true;
+        
+        function updateDisplay() {
+            document.getElementById('display').innerText = currentDisplay;
+        }
+        
+        function appendToDisplay(value) {
+            if (currentDisplay === '0' || isNewInput) {
+                currentDisplay = value;
+                isNewInput = false;
+            } else {
+                currentDisplay += value;
+            }
+            updateDisplay();
+        }
+        
+        function clearDisplay() {
+            currentDisplay = '0';
+            isNewInput = true;
+            updateDisplay();
+        }
+        
+        function backspace() {
+            if (currentDisplay.length === 1) {
+                clearDisplay();
+            } else {
+                currentDisplay = currentDisplay.slice(0, -1);
+                updateDisplay();
+            }
+        }
+        
+        function calculate() {
+            try {
+                // Replace some math functions for eval
+                let expression = currentDisplay
+                    .replace(/\\/g, '**') // Handle exponent
+                    .replace(/\^/g, '**');  // Alternative exponent
+                
+                currentDisplay = eval(expression).toString();
+                updateDisplay();
+                isNewInput = true;
+            } catch (error) {
+                currentDisplay = 'Error';
+                updateDisplay();
+                setTimeout(clearDisplay, 1000);
+            }
+        }
+        
+        function calculateFunction(func) {
+            if (isNewInput) {
+                currentDisplay = func;
+                isNewInput = false;
+            } else {
+                currentDisplay += func;
+            }
+            updateDisplay();
+        }
+
+        // Temperature converter
+        function convertTemperature() {
+            const fromTemp = document.getElementById('from-temp').value;
+            const toTemp = document.getElementById('to-temp').value;
+            const inputValue = parseFloat(document.getElementById('temp-input').value);
+            
+            if (isNaN(inputValue)) {
+                document.getElementById('temp-result').innerText = '-';
+                return;
+            }
+            
+            let result;
+            
+            // Convert to Celsius first
+            let celsius;
+            switch (fromTemp) {
+                case 'celsius':
+                    celsius = inputValue;
+                    break;
+                case 'fahrenheit':
+                    celsius = (inputValue - 32) * 5/9;
+                    break;
+                case 'kelvin':
+                    celsius = inputValue - 273.15;
+                    break;
+            }
+            
+            // Convert from Celsius to target unit
+            switch (toTemp) {
+                case 'celsius':
+                    result = celsius;
+                    break;
+                case 'fahrenheit':
+                    result = (celsius * 9/5) + 32;
+                    break;
+                case 'kelvin':
+                    result = celsius + 273.15;
+                    break;
+            }
+            
+            document.getElementById('temp-result').innerText = result.toFixed(2);
+        }
+
+        // Calendar functionality
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+
+        // Indian holidays data (simplified)
+        const indianHolidays = {
+            // Format: "month-day": ["Holiday Name", isNational]
+            // Month is 0-indexed (0=January, 11=December)
+            "0-26": ["Republic Day", true],
+            "1-19": ["Chhatrapati Shivaji Maharaj Jayanti", false],
+            "2-22": ["Bihar Diwas", false],
+            "3-14": ["Ambedkar Jayanti", true],
+            "3-15": ["Bengali New Year", false],
+            "4-1": ["Maharashtra Day", false],
+            "7-15": ["Independence Day", true],
+            "8-5": ["Teachers' Day", false],
+            "9-2": ["Gandhi Jayanti", true],
+            "10-1": ["Karnataka Rajyotsava", false],
+            "11-25": ["Christmas", false]
+        };
+
+        function renderCalendar() {
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay();
+            
+            const today = new Date();
+            const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
+            
+            document.getElementById('calendar-month-year').textContent = 
+                ${firstDay.toLocaleString('default', { month: 'long' })} ${currentYear};
+            
+            const calendarDays = document.getElementById('calendar-days');
+            calendarDays.innerHTML = '';
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < startingDay; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day other-month';
+                calendarDays.appendChild(dayElement);
+            }
+            
+            // Add cells for each day of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                if (isCurrentMonth && day === today.getDate()) {
+                    dayElement.classList.add('today');
+                }
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'calendar-day-number';
+                dayNumber.textContent = day;
+                dayElement.appendChild(dayNumber);
+                
+                // Check for holidays
+                const holidayKey = ${currentMonth}-${day};
+                if (indianHolidays[holidayKey]) {
+                    const holidayElement = document.createElement('div');
+                    holidayElement.className = 'calendar-holiday';
+                    holidayElement.textContent = indianHolidays[holidayKey][0];
+                    dayElement.appendChild(holidayElement);
+                }
+                
+                calendarDays.appendChild(dayElement);
+            }
+            
+            // Update holiday list
+            updateHolidayList();
+        }
+        
+        function updateHolidayList() {
+            const holidayItems = document.getElementById('holiday-items');
+            holidayItems.innerHTML = '';
+            
+            const monthHolidays = [];
+            
+            // Find holidays for the current month
+            for (const key in indianHolidays) {
+                const [month, day] = key.split('-').map(Number);
+                if (month === currentMonth) {
+                    monthHolidays.push({
+                        day: day,
+                        name: indianHolidays[key][0],
+                        isNational: indianHolidays[key][1]
+                    });
+                }
+            }
+            
+            // Sort holidays by day
+            monthHolidays.sort((a, b) => a.day - b.day);
+            
+            // Display holidays
+            if (monthHolidays.length === 0) {
+                const item = document.createElement('div');
+                item.className = 'holiday-item';
+                item.textContent = 'No holidays this month';
+                holidayItems.appendChild(item);
+            } else {
+                monthHolidays.forEach(holiday => {
+                    const item = document.createElement('div');
+                    item.className = 'holiday-item';
+                    
+                    const date = new Date(currentYear, currentMonth, holiday.day);
+                    const dateStr = date.toLocaleDateString('en-IN', { 
+                        weekday: 'short', 
+                        day: 'numeric', 
+                        month: 'short' 
+                    });
+                    
+                    item.innerHTML = `
+                        <span>${dateStr}</span>
+                        <span>${holiday.name} ${holiday.isNational ? '🇮🇳' : ''}</span>
+                    `;
+                    
+                    holidayItems.appendChild(item);
+                });
+            }
+        }
+        
+        function previousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+        
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        // Tab functionality
+        function openTab(tabName) {
+            const tabs = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Dark/Light mode toggle
+        function toggleMode() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.getElementById('mode-icon');
+            const text = document.getElementById('mode-text');
+            
+            if (document.body.classList.contains('light-mode')) {
+                icon.innerText = '☀️';
+                text.innerText = 'Light Mode';
+            } else {
+                icon.innerText = '🌙';
+                text.innerText = 'Dark Mode';
+            }
+        }
+
+        // Initialize calendar
+        renderCalendar();
+    </script>
+</body>
+</html>
