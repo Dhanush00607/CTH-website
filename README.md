@@ -29,8 +29,7 @@ Welcome to the **Scientific Calculator Web App** — a feature-rich, visually ap
 - Razor syntax compatible (`.cshtml`) if used in ASP.NET Core projects
 
 ## 📸 Preview
-"D:\feem\Index.cshtml - AnimeCalculator - Visual Studio Code 2025-05-02 09-39-32.mp4"
-"D:\feem\Scientific Calculator with Calendar - AnimeCalculator - Personal - Microsoft_ Edge 2025-05-02 09-40-39.mp4"
+
 
 ## 📦 How to Use
 1. Clone or download this repository.
