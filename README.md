@@ -30,6 +30,7 @@ Welcome to the **Scientific Calculator Web App** — a feature-rich, visually ap
 
 ## 📸 Preview
 https://github.com/user-attachments/assets/8154eb61-2632-480b-8e3f-794bbc518a1c
+
 https://github.com/user-attachments/assets/9847780b-e4b9-406c-a7b7-69d0c3489198
 
 ## 📦 How to Use
